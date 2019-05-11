@@ -15,6 +15,10 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
 declare namespace algoliasearch {
   /**
+   * A union type to let users have their types on responses as well as the `objectID` property.
+   */
+  type Hit<T> = T & {objectID: string}
+  /**
    * Interface for the algolia client object
    */
   interface Client {
@@ -630,35 +634,35 @@ declare namespace algoliasearch {
      * Browse an index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browse(query: string, parameters: BrowseParameters, cb: (err: Error, res: BrowseResponse) => void): void;
+    browse<T = {}>(query: string, parameters: BrowseParameters, cb: (err: Error, res: BrowseResponse<T>) => void): void;
     /**
      * Browse an index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browse(query: string, cb: (err: Error, res: BrowseResponse) => void): void;
+    browse<T = {}>(query: string, cb: (err: Error, res: BrowseResponse<T>) => void): void;
     /**
      * Browse an index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browse(query: string, parameters?: BrowseParameters): Promise<BrowseResponse>;
+    browse<T = {}>(query: string, parameters?: BrowseParameters): Promise<BrowseResponse<T>>;
     /**
      * Browse an index from a cursor
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browseFrom(
+    browseFrom<T = {}>(
       cursor: string,
-      cb: (err: Error, res: BrowseResponse) => void
+      cb: (err: Error, res: BrowseResponse<T>) => void
     ): void;
     /**
      * Browse an index from a cursor
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browseFrom(cursor: string): Promise<BrowseResponse>;
+    browseFrom<T = {}>(cursor: string): Promise<BrowseResponse<T>>;
     /**
      * Browse an entire index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browseAll(query?: string, parameters?: BrowseParameters): Browser;
+    browseAll<T = {}>(query?: string, parameters?: BrowseParameters): Browser<T>;
     /**
      * Clear an index content
      * https://github.com/algolia/algoliasearch-client-js#clear-index---clearindex
@@ -979,9 +983,9 @@ declare namespace algoliasearch {
      */
     hitsPerPage?: number;
   }
-  interface BrowseResponse {
+  interface BrowseResponse<T> {
     cursor?: string;
-    hits: {objectID: string}[];
+    hits: Hit<T>[];
     params: string;
     query: string;
     processingTimeMS: number;
@@ -995,11 +999,11 @@ declare namespace algoliasearch {
     | "attributesToHighlight"
     | "attributesToSnippet"
   >
-  interface Browser {
+  interface Browser<T> {
     on(type: "error", cb: (err: Error) => void): void
     on(type: "end", cb: () => void): void
     on(type: "stop", cb: () => void): void
-    on(type: "result", cb: (content: BrowseResponse) => void): void
+    on(type: "result", cb: (content: BrowseResponse<T>) => void): void
     stop(): void
   }
   /**
@@ -1816,7 +1820,7 @@ declare namespace algoliasearch {
      * Contains all the hits matching the query
      * https://www.algolia.com/doc/api-reference/api-methods/search/?language=javascript#response
      */
-    hits: T[];
+    hits: Hit<T>[];
     /**
      * Current page
      * https://www.algolia.com/doc/api-reference/api-methods/search/?language=javascript#response
