@@ -15,6 +15,10 @@ type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>
 
 declare namespace algoliasearch {
   /**
+   * A union type to let users have their types on responses as well as the `objectID` property.
+   */
+  type Hit<T> = T & {objectID: string}
+  /**
    * Interface for the algolia client object
    */
   interface Client {
@@ -27,7 +31,7 @@ declare namespace algoliasearch {
      * Query on multiple index
      * https://github.com/algolia/algoliasearch-client-js#multiple-queries---multiplequeries
      */
-    search<T=any>(
+    search<T extends {}>(
       queries: {
         indexName: string;
         query: string;
@@ -39,7 +43,7 @@ declare namespace algoliasearch {
      * Query on multiple index
      * https://github.com/algolia/algoliasearch-client-js#multiple-queries---multiplequeries
      */
-    search<T=any>(
+    search<T extends {}>(
       queries: {
         indexName: string;
         query: string;
@@ -602,12 +606,12 @@ declare namespace algoliasearch {
      * Search in an index
      * https://github.com/algolia/algoliasearch-client-js#search-in-an-index---search
      */
-    search<T=any>(params: QueryParameters): Promise<Response<T>>;
+    search<T extends {}>(params: QueryParameters): Promise<Response<T>>;
     /**
      * Search in an index
      * https://github.com/algolia/algoliasearch-client-js#search-in-an-index---search
      */
-    search<T=any>(
+    search<T extends {}>(
       params: QueryParameters,
       cb: (err: Error, res: Response<T>) => void
     ): void;
@@ -630,35 +634,35 @@ declare namespace algoliasearch {
      * Browse an index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browse(query: string, parameters: BrowseParameters, cb: (err: Error, res: BrowseResponse) => void): void;
+    browse<T extends object>(query: string, parameters: BrowseParameters, cb: (err: Error, res: BrowseResponse<T>) => void): void;
     /**
      * Browse an index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browse(query: string, cb: (err: Error, res: BrowseResponse) => void): void;
+    browse<T extends object>(query: string, cb: (err: Error, res: BrowseResponse<T>) => void): void;
     /**
      * Browse an index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browse(query: string, parameters?: BrowseParameters): Promise<BrowseResponse>;
+    browse<T extends object>(query: string, parameters?: BrowseParameters): Promise<BrowseResponse<T>>;
     /**
      * Browse an index from a cursor
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browseFrom(
+    browseFrom<T extends object>(
       cursor: string,
-      cb: (err: Error, res: BrowseResponse) => void
+      cb: (err: Error, res: BrowseResponse<T>) => void
     ): void;
     /**
      * Browse an index from a cursor
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browseFrom(cursor: string): Promise<BrowseResponse>;
+    browseFrom<T extends object>(cursor: string): Promise<BrowseResponse<T>>;
     /**
      * Browse an entire index
      * https://github.com/algolia/algoliasearch-client-js#backup--export-an-index---browse
      */
-    browseAll(query?: string, parameters?: BrowseParameters): Browser;
+    browseAll<T extends object>(query?: string, parameters?: BrowseParameters): Browser<T>;
     /**
      * Clear an index content
      * https://github.com/algolia/algoliasearch-client-js#clear-index---clearindex
@@ -979,9 +983,9 @@ declare namespace algoliasearch {
      */
     hitsPerPage?: number;
   }
-  interface BrowseResponse {
+  interface BrowseResponse<T> {
     cursor?: string;
-    hits: {objectID: string}[];
+    hits: Hit<T>[];
     params: string;
     query: string;
     processingTimeMS: number;
@@ -994,12 +998,12 @@ declare namespace algoliasearch {
     | "getRankingInfo"
     | "attributesToHighlight"
     | "attributesToSnippet"
-  >
-  interface Browser {
+    >
+  interface Browser<T> {
     on(type: "error", cb: (err: Error) => void): void
     on(type: "end", cb: () => void): void
     on(type: "stop", cb: () => void): void
-    on(type: "result", cb: (content: BrowseResponse) => void): void
+    on(type: "result", cb: (content: BrowseResponse<T>) => void): void
     stop(): void
   }
   /**
@@ -1065,12 +1069,12 @@ declare namespace algoliasearch {
         query?:
           | string
           | {
-              /**
-               * Tokens (literals or placeholders) from the query pattern
-               * that should be removed from the query string.
-               */
-              remove: string[];
-            };
+          /**
+           * Tokens (literals or placeholders) from the query pattern
+           * that should be removed from the query string.
+           */
+          remove: string[];
+        };
         /**
          * Names of facets to which automatic filtering must be applied;
          * they must match the facet name of a facet value placeholder in the query pattern.
@@ -1135,44 +1139,44 @@ declare namespace algoliasearch {
     userToken?: string;
   }
   interface QueryParameters {
-   /**
-    * Query string used to perform the search
-    * default: ''
-    * https://www.algolia.com/doc/api-reference/api-parameters/query/
-    */
-   query?: string;
-   /**
-    * Filter the query with numeric, facet or/and tag filters
-    * default: ""
-    * https://www.algolia.com/doc/api-reference/api-parameters/filters/
-    */
-   filters?: string;
-   /**
-    * A string that contains the list of attributes you want to retrieve in order to minimize the size of the JSON answer.
-    * default: *
-    * https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/
-    */
-   attributesToRetrieve?: string[];
-   /**
-    * List of attributes you want to use for textual search
-    * default: attributeToIndex
-    * https://www.algolia.com/doc/api-reference/api-parameters/restrictSearchableAttributes/
-    */
-   restrictSearchableAttributes?: string[];
-   /**
-    * You can use facets to retrieve only a part of your attributes declared in attributesForFaceting attributes
-    * default: []
-    * https://www.algolia.com/doc/api-reference/api-parameters/facets/
-    */
-   facets?: string[];
     /**
-    * Force faceting to be applied after de-duplication (via the Distinct setting).
-    * When using the distinct setting in combination with faceting, facet counts may be higher than expected.
-    * This is because the engine, by default, computes faceting before applying de-duplication (distinct).
-    * When facetingAfterDistinct is set to true, the engine calculates faceting after the de-duplication has been applied.
-    * default ""
-    * https://www.algolia.com/doc/api-reference/api-parameters/facetingAfterDistinct/
-    */
+     * Query string used to perform the search
+     * default: ''
+     * https://www.algolia.com/doc/api-reference/api-parameters/query/
+     */
+    query?: string;
+    /**
+     * Filter the query with numeric, facet or/and tag filters
+     * default: ""
+     * https://www.algolia.com/doc/api-reference/api-parameters/filters/
+     */
+    filters?: string;
+    /**
+     * A string that contains the list of attributes you want to retrieve in order to minimize the size of the JSON answer.
+     * default: *
+     * https://www.algolia.com/doc/api-reference/api-parameters/attributesToRetrieve/
+     */
+    attributesToRetrieve?: string[];
+    /**
+     * List of attributes you want to use for textual search
+     * default: attributeToIndex
+     * https://www.algolia.com/doc/api-reference/api-parameters/restrictSearchableAttributes/
+     */
+    restrictSearchableAttributes?: string[];
+    /**
+     * You can use facets to retrieve only a part of your attributes declared in attributesForFaceting attributes
+     * default: []
+     * https://www.algolia.com/doc/api-reference/api-parameters/facets/
+     */
+    facets?: string[];
+    /**
+     * Force faceting to be applied after de-duplication (via the Distinct setting).
+     * When using the distinct setting in combination with faceting, facet counts may be higher than expected.
+     * This is because the engine, by default, computes faceting before applying de-duplication (distinct).
+     * When facetingAfterDistinct is set to true, the engine calculates faceting after the de-duplication has been applied.
+     * default ""
+     * https://www.algolia.com/doc/api-reference/api-parameters/facetingAfterDistinct/
+     */
     facetingAfterDistinct?: boolean;
     /**
      * Limit the number of facet values returned for each facet.
@@ -1811,12 +1815,12 @@ declare namespace algoliasearch {
     queryLanguages?: Array<'af' | 'ar' | 'az' | 'bg' | 'bn' | 'ca' | 'cs' | 'cy' | 'da' | 'de' | 'el' | 'en' | 'eo' | 'es' | 'et' | 'eu' | 'fa' | 'fi' | 'fo' | 'fr' | 'ga' | 'gl' | 'he' | 'hi' | 'hu' | 'hy' | 'id' | 'is' | 'it' | 'ja' | 'ka' | 'kk' | 'ko' | 'ku' | 'ky' | 'lt' | 'lv' | 'mi' | 'mn' | 'mr' | 'ms' | 'mt' | 'nb' | 'nl' | 'no' | 'ns' | 'pl' | 'ps' | 'pt' | 'pt-br' | 'qu' | 'ro' | 'ru' | 'sk' | 'sq' | 'sv' | 'sw' | 'ta' | 'te' | 'th' | 'tl' | 'tn' | 'tr' | 'tt' | 'uk' | 'ur' | 'uz' | 'zh'>;
   }
 
-  interface Response<T=any> {
+  interface Response<T> {
     /**
      * Contains all the hits matching the query
      * https://www.algolia.com/doc/api-reference/api-methods/search/?language=javascript#response
      */
-    hits: T[];
+    hits: Hit<T>[];
     /**
      * Current page
      * https://www.algolia.com/doc/api-reference/api-methods/search/?language=javascript#response
@@ -1875,7 +1879,7 @@ declare namespace algoliasearch {
     cursor?: string;
   }
 
-  interface MultiResponse<T=any> {
+  interface MultiResponse<T> {
     results: Response<T>[];
   }
 }
